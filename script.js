@@ -2,37 +2,124 @@ const canvas2 = document.querySelector("canvas.webgl2");
 
 // Scene
 const scene2 = new THREE.Scene();
+scene2.fog = new THREE.FogExp2(0xefd1b5, 0.0025);
 
-var tuniform = {
-  iTime: { type: "f", value: 1 },
-  iMouse: { value: new THREE.Vector4() },
-  iChannel0: { type: "t", value: THREE.ImageUtils.loadTexture("images/a.png") },
-  iChannel1: {
-    type: "t",
-    value: THREE.ImageUtils.loadTexture("images/b.png"),
+//Grid Helper
+var division = 30;
+var limit = 100;
+var grid = new THREE.GridHelper(limit * 2, division, "#69CCDF", "#69CCDF");
+var grid2 = new THREE.GridHelper(limit * 2, division, "#69CCDF", "#69CCDF");
+
+var moveable = [];
+for (let i = 0; i <= division; i++) {
+  moveable.push(1, 1, 0, 0); // move horizontal lines only (1 - point is moveable)
+}
+grid.geometry.addAttribute(
+  "moveable",
+  new THREE.BufferAttribute(new Uint8Array(moveable), 1)
+);
+grid.material = new THREE.ShaderMaterial({
+  uniforms: {
+    time: {
+      value: 0,
+    },
+    limits: {
+      value: new THREE.Vector2(-limit, limit),
+    },
+    speed: {
+      value: 5,
+    },
   },
-};
+  vertexShader: `
+    uniform float time;
+    uniform vec2 limits;
+    uniform float speed;
 
-tuniform.iChannel0.value.wrapS = tuniform.iChannel0.value.wrapT =
-  THREE.RepeatWrapping;
-tuniform.iChannel1.value.wrapS = tuniform.iChannel1.value.wrapT =
-  THREE.RepeatWrapping;
+    attribute float moveable;
 
-const planebg = new THREE.PlaneGeometry(25, 15);
-const planebgmat = new THREE.ShaderMaterial({
-  uniforms: tuniform,
-  vertexShader: document.getElementById("vertexshadera").textContent,
-  fragmentShader: document.getElementById("fragmentshadera").textContent,
-  //blending: THREE.AdditiveBlending,
-  depthTest: true,
-  transparent: false,
-  vertexColors: false,
-  side: THREE.DoubleSide,
+    varying vec3 vColor;
+
+    void main() {
+      vColor = color;
+      float limLen = limits.y - limits.x;
+      vec3 pos = position;
+
+      if (floor(moveable + 0.5) > 0.5){
+        // if a point has "moveable" attribute = 1
+        float dist = speed * time;
+        float currPos = mod((pos.z + dist) - limits.x, limLen) + limits.x;
+        pos.z = currPos;
+      }
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+
+    void main() {
+      gl_FragColor = vec4(vColor, 1);
+    }
+  `,
+  vertexColors: THREE.VertexColors,
 });
-const planeMesh = new THREE.Mesh(planebg, planebgmat);
-scene2.add(planeMesh);
-planeMesh.position.set(0, 0, -10);
-planeMesh.rotation.set(0, 0, 0);
+grid2.geometry.addAttribute(
+  "moveable",
+  new THREE.BufferAttribute(new Uint8Array(moveable), 1)
+);
+grid2.material = new THREE.ShaderMaterial({
+  uniforms: {
+    time: {
+      value: 0,
+    },
+    limits: {
+      value: new THREE.Vector2(-limit, limit),
+    },
+    speed: {
+      value: 5,
+    },
+  },
+  vertexShader: `
+    uniform float time;
+    uniform vec2 limits;
+    uniform float speed;
+
+    attribute float moveable;
+
+    varying vec3 vColor;
+
+    void main() {
+      vColor = color;
+      float limLen = limits.y - limits.x;
+      vec3 pos = position;
+
+      if (floor(moveable + 0.5) > 0.5){
+        // if a point has "moveable" attribute = 1
+        float dist = speed * time;
+        float currPos = mod((pos.z + dist) - limits.x, limLen) + limits.x;
+        pos.z = currPos;
+      }
+
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+
+    void main() {
+      gl_FragColor = vec4(vColor, 1);
+    }
+  `,
+  vertexColors: THREE.VertexColors,
+});
+grid.position.set(0, -4, 0);
+grid.rotation.set(0, 0, 0);
+grid.scale.set(0.4, 1, 1);
+scene2.add(grid);
+grid2.position.set(0, 4, 0);
+grid2.rotation.set(0, 0, 0);
+grid2.scale.set(0.4, 1, 1);
+scene2.add(grid2);
 
 const sizes2 = {
   width: window.innerWidth,
@@ -58,7 +145,7 @@ window.addEventListener("resize", () => {
  */
 // Base camera
 const camera2 = new THREE.PerspectiveCamera(
-  45,
+  50,
   sizes2.width / sizes2.height,
   0.1,
   1000
@@ -76,17 +163,62 @@ const renderer2 = new THREE.WebGLRenderer({
   alpha: true,
   antialias: true,
 });
+renderer2.autoClear = false;
 renderer2.setSize(sizes2.width, sizes2.height);
 renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+//renderer.toneMapping = THREE.ReinhardToneMapping;
+
+const renderScene = new THREE.RenderPass(scene2, camera2);
+const effectFXAA = new THREE.ShaderPass(THREE.FXAAShader);
+effectFXAA.uniforms.resolution.value.set(
+  1 / window.innerWidth,
+  1 / window.innerHeight
+);
+
+const params = {
+  exposure: 0,
+  bloomStrength: 0.5,
+  bloomThreshold: 0,
+  bloomRadius: 0.2,
+};
+let composer, mixer;
+
+const bloomPass = new THREE.UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  1.5,
+  0.4,
+  0.85
+);
+bloomPass.threshold = params.bloomThreshold;
+bloomPass.strength = params.bloomStrength;
+bloomPass.radius = params.bloomRadius;
+//bloomPass.renderToScreen = true;
+
+composer = new THREE.EffectComposer(renderer2);
+composer.addPass(renderScene);
+composer.addPass(effectFXAA);
+composer.addPass(bloomPass);
+
+renderer2.gammaInput = false;
+//renderer.gammaOutput = true;
+renderer2.toneMappingExposure = Math.pow(0.9, 4.0);
 
 const clock2 = new THREE.Clock();
+var time = 0;
 
 const tick2 = () => {
   window.requestAnimationFrame(tick2);
-  const deltaTime2 = clock2.getDelta();
+  //const deltaTime2 = clock2.getDelta();
 
-  tuniform.iTime.value += deltaTime2;
+  time -= clock2.getDelta();
+  grid.material.uniforms.time.value = time;
+  grid2.material.uniforms.time.value = time;
+  renderer2.clear();
 
+  // Update Orbital Controls
+
+  composer.render();
+  renderer2.clearDepth();
   renderer2.render(scene2, camera2);
 };
 
@@ -122,7 +254,7 @@ loader.load(
   // called when the resource is loaded
   function (gltf) {
     obj = gltf.scene;
-    scene.add(obj);
+    //scene.add(obj);
     obj.scale.set(0.508, 0.508, 0.508);
     obj.position.set(0, 0, 0);
     obj.rotation.set(0, Math.PI / 4, 0);
@@ -163,222 +295,248 @@ loader.load(
 // // };
 
 // window.addEventListener("mousemove", onMouseMove);
-const waterMaterial2 = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader2").textContent,
-  fragmentShader: document.getElementById("fragmentShader2").textContent,
-  transparent: false,
-  side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor2) },
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
-});
-const waterMaterial3 = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader2").textContent,
-  fragmentShader: document.getElementById("fragmentShader2").textContent,
-  transparent: false,
-  side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor3) },
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
-});
-const waterMaterial4 = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader4").textContent,
-  fragmentShader: document.getElementById("fragmentShader4").textContent,
-  transparent: false,
-  side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor4) }, // green
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
-});
-const waterMaterial6 = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader4").textContent,
-  fragmentShader: document.getElementById("fragmentShader4").textContent,
-  transparent: false,
-  side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor5) },
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
-});
-const waterMaterial5 = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader").textContent,
-  fragmentShader: document.getElementById("fragmentShader").textContent,
-  transparent: false,
-  side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor1) },
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
-});
+// const waterMaterial2 = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader2").textContent,
+//   fragmentShader: document.getElementById("fragmentShader2").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor2) },
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
+// const waterMaterial3 = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader2").textContent,
+//   fragmentShader: document.getElementById("fragmentShader2").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor3) },
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
+// const waterMaterial4 = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader4").textContent,
+//   fragmentShader: document.getElementById("fragmentShader4").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor4) }, // green
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
+// const waterMaterial6 = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader4").textContent,
+//   fragmentShader: document.getElementById("fragmentShader4").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor5) },
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
+// const waterMaterial5 = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader").textContent,
+//   fragmentShader: document.getElementById("fragmentShader").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor1) },
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
 //////// Plane 1 /////////
 
 const geometry = new THREE.PlaneGeometry(1, 1, 100, 100);
-const waterMaterial = new THREE.ShaderMaterial({
-  vertexShader: document.getElementById("vertexShader").textContent,
-  fragmentShader: document.getElementById("fragmentShader").textContent,
-  transparent: false,
+// const waterMaterial = new THREE.ShaderMaterial({
+//   vertexShader: document.getElementById("vertexShader").textContent,
+//   fragmentShader: document.getElementById("fragmentShader").textContent,
+//   transparent: false,
+//   side: THREE.DoubleSide,
+//   fog: true,
+//   uniforms: {
+//     uTime: { value: 0 },
+//     uMouse: { value: new THREE.Vector2() },
+//     uBigWavesElevation: { value: 0 },
+//     uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
+//     uBigWaveSpeed: { value: 0 },
+//     // Small Waves
+//     uSmallWavesElevation: { value: 0.022 },
+//     uSmallWavesFrequency: { value: 3 },
+//     uSmallWavesSpeed: { value: 0.2 },
+//     uSmallWavesIterations: { value: 4 },
+//     // Color
+//     uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
+//     uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor) },
+//     uColorOffset: { value: 0.0984 },
+//     uColorMultiplier: { value: 10 },
+//   },
+// });
+const texture1 = new THREE.TextureLoader().load("textures/delivery-orange.jpg");
+const material1 = new THREE.MeshStandardMaterial({
+  map: texture1,
+  color: 0xff781f,
   side: THREE.DoubleSide,
-  fog: true,
-  uniforms: {
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2() },
-    uBigWavesElevation: { value: 0 },
-    uBigWavesFrequency: { value: new THREE.Vector2(0, 0) },
-    uBigWaveSpeed: { value: 0 },
-    // Small Waves
-    uSmallWavesElevation: { value: 0.022 },
-    uSmallWavesFrequency: { value: 3 },
-    uSmallWavesSpeed: { value: 0.2 },
-    uSmallWavesIterations: { value: 4 },
-    // Color
-    uDepthColor: { value: new THREE.Color(debugObject.waveDepthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.waveSurfaceColor) },
-    uColorOffset: { value: 0.0984 },
-    uColorMultiplier: { value: 10 },
-  },
 });
-const plane = new THREE.Mesh(geometry, waterMaterial); //cyan
+const plane = new THREE.Mesh(geometry, material1); //orange
 scene.add(plane);
-plane.position.set(0, 0, -0.488);
-plane.scale.set(1, 1, 1);
-//plane.rotation.x = -Math.PI * 0.5;
+plane.position.set(0, 0, -0.25);
+plane.scale.set(0.5, 0.5, 0.5);
+plane.rotation.set(0, -Math.PI, 0);
 plane.name = "plane";
 
 //////// Plane 2 /////////
 
 const geometry2 = new THREE.PlaneGeometry(1, 1, 100, 100);
-const material2 = new THREE.MeshBasicMaterial({
-  color: 0xff0000,
+const texture2 = new THREE.TextureLoader().load("textures/contacts-red.jpg");
+const material2 = new THREE.MeshStandardMaterial({
+  map: texture2,
+  color: 0xe90052,
   side: THREE.DoubleSide,
 });
-const plane2 = new THREE.Mesh(geometry2, waterMaterial5);
+const plane2 = new THREE.Mesh(geometry2, material2); //waterMaterial5
 scene.add(plane2);
-plane2.position.set(0, 0, 0.5);
+plane2.position.set(0, 0, 0.25);
+plane2.scale.set(0.5, 0.5, 0.5);
 plane2.name = "plane2";
 
 //////// Plane 3 /////////
 
 const geometry3 = new THREE.PlaneGeometry(1, 1, 100, 100);
-const material3 = new THREE.MeshBasicMaterial({
-  color: 0x00ff00,
+const texture3 = new THREE.TextureLoader().load("textures/About-blue.jpg");
+const material3 = new THREE.MeshStandardMaterial({
+  map: texture3,
+  color: 0x398ad7,
   side: THREE.DoubleSide,
 });
-const plane3 = new THREE.Mesh(geometry3, waterMaterial6); //red
+const plane3 = new THREE.Mesh(geometry3, material3); //blue //waterMaterial6
 scene.add(plane3);
-plane3.position.set(0.5, 0, 0);
+plane3.position.set(0.25, 0, 0);
 plane3.rotation.set(0, Math.PI / 2, 0);
+plane3.scale.set(0.5, 0.5, 0.5);
 plane3.name = "plane3";
 
 //////// Plane 4 /////////
 
 const geometry4 = new THREE.PlaneGeometry(1, 1, 100, 100);
-const material4 = new THREE.MeshBasicMaterial({
-  color: 0x0000ff,
+const texture4 = new THREE.TextureLoader().load(
+  "textures/club dark page - green.jpg"
+);
+const material4 = new THREE.MeshStandardMaterial({
+  map: texture4,
+  color: 0x00ff85,
   side: THREE.DoubleSide,
 });
-const plane4 = new THREE.Mesh(geometry4, waterMaterial4); //green
+const plane4 = new THREE.Mesh(geometry4, material4); //green waterMaterial4
 scene.add(plane4);
-plane4.position.set(-0.488, 0, 0);
-plane4.rotation.set(0, Math.PI / 2, 0);
+plane4.position.set(-0.25, 0, 0);
+plane4.scale.set(0.5, 0.5, 0.5);
+plane4.rotation.set(0, -Math.PI / 2, 0);
 plane4.name = "plane4";
 
 //////// Plane 5 /////////
 
 const geometry5 = new THREE.PlaneGeometry(1, 1, 100, 100); // purple
-const material5 = new THREE.MeshBasicMaterial({
-  color: 0xff9900,
+const texture5 = new THREE.TextureLoader().load(
+  "textures/Privacy policy - purple.jpg"
+);
+const material5 = new THREE.MeshStandardMaterial({
+  map: texture5,
+  color: 0xe257ff,
   side: THREE.DoubleSide,
 });
-const plane5 = new THREE.Mesh(geometry5, waterMaterial2);
+const plane5 = new THREE.Mesh(geometry5, material5); //waterMaterial2
 scene.add(plane5);
-plane5.position.set(0, 0.508, 0);
-plane5.rotation.set(Math.PI / 2, 0, 0);
+plane5.position.set(0, 0.25, 0);
+plane5.rotation.set(-Math.PI / 2, 0, 0);
+plane5.scale.set(0.5, 0.5, 0.5);
 plane5.name = "plane5";
 
 //////// Plane 6 /////////
 
 const geometry6 = new THREE.PlaneGeometry(1, 1, 100, 100); // yellow
-const material6 = new THREE.MeshBasicMaterial({
-  color: 0xff00ff,
+const texture6 = new THREE.TextureLoader().load("textures/club - yellow.jpg");
+const material6 = new THREE.MeshStandardMaterial({
+  map: texture6,
+  color: 0xeaff02,
   side: THREE.DoubleSide,
 });
-const plane6 = new THREE.Mesh(geometry6, waterMaterial3);
+
+const plane6 = new THREE.Mesh(geometry6, material6); //waterMaterial3
 scene.add(plane6);
-plane6.position.set(0, -0.485, 0);
+plane6.position.set(0, -0.25, 0);
 plane6.rotation.set(Math.PI / 2, 0, 0);
+plane6.scale.set(0.5, 0.5, 0.5);
 plane6.name = "plane6";
 
 const group = new THREE.Group();
@@ -393,9 +551,21 @@ scene.add(group);
 group.rotation.set(0, Math.PI / 4, 0);
 
 // Lights
-const light = new THREE.AmbientLight(0xffffff, 1); // soft white light
+const light = new THREE.AmbientLight(0xffffff, 0.5); // soft white light
 scene.add(light);
 
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+scene.add(directionalLight);
+directionalLight.position.set(1, -1, 1);
+const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+scene.add(directionalLight2);
+directionalLight2.position.set(-1, 1, 1);
+const directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.5);
+scene.add(directionalLight3);
+directionalLight3.position.set(-1, 1, -1);
+const directionalLight4 = new THREE.DirectionalLight(0xffffff, 0.5);
+scene.add(directionalLight4);
+directionalLight4.position.set(1, -1, -1);
 /**
  * Sizes
  */
@@ -459,7 +629,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 //// mmi /////
 gsap.registerPlugin();
-const time = gsap.timeline();
+const time1 = gsap.timeline();
 const time2 = gsap.timeline();
 const time3 = gsap.timeline();
 const time4 = gsap.timeline();
@@ -472,7 +642,7 @@ const time9 = gsap.timeline();
 const mmi = new MouseMeshInteraction(scene, camera);
 mmi.addHandler("plane", "click", function (mesh) {
   console.log("cyan");
-  time.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -484,7 +654,7 @@ mmi.addHandler("plane", "click", function (mesh) {
 });
 mmi.addHandler("plane2", "click", function (mesh) {
   console.log(" orange");
-  time.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -496,7 +666,7 @@ mmi.addHandler("plane2", "click", function (mesh) {
 });
 mmi.addHandler("plane3", "click", function (mesh) {
   console.log("red");
-  time.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -508,7 +678,7 @@ mmi.addHandler("plane3", "click", function (mesh) {
 });
 mmi.addHandler("plane4", "click", function (mesh) {
   console.log("green");
-  time.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -520,7 +690,7 @@ mmi.addHandler("plane4", "click", function (mesh) {
 });
 mmi.addHandler("plane5", "click", function (mesh) {
   console.log("purple");
-  time.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -532,7 +702,7 @@ mmi.addHandler("plane5", "click", function (mesh) {
 });
 mmi.addHandler("plane6", "click", function (mesh) {
   console.log("yellow");
-  time.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time3.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 1 });
   time4.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
@@ -554,13 +724,13 @@ const tick = () => {
   // targetX = mouseX * .001
   // targetY = mouseY * .001
   // Update time
-  waterMaterial.uniforms.uTime.value = elapsedTime;
-  waterMaterial2.uniforms.uTime.value = elapsedTime;
-  waterMaterial3.uniforms.uTime.value = elapsedTime;
-  waterMaterial4.uniforms.uTime.value = elapsedTime;
-  waterMaterial5.uniforms.uTime.value = elapsedTime;
-  waterMaterial6.uniforms.uTime.value = elapsedTime;
-  tuniform.iTime.value += deltaTime;
+  // waterMaterial.uniforms.uTime.value = elapsedTime;
+  // waterMaterial2.uniforms.uTime.value = elapsedTime;
+  // waterMaterial3.uniforms.uTime.value = elapsedTime;
+  // waterMaterial4.uniforms.uTime.value = elapsedTime;
+  // waterMaterial5.uniforms.uTime.value = elapsedTime;
+  // waterMaterial6.uniforms.uTime.value = elapsedTime;
+  //tuniform.iTime.value += deltaTime;
 
   // Update objects
   //obj.rotation.y += .5 * (targetX - obj.rotation.y)
@@ -585,9 +755,9 @@ var tl3 = gsap.timeline();
 var tl4 = gsap.timeline();
 var tl5 = gsap.timeline();
 var tl6 = gsap.timeline();
-tl.from(plane.position, { z: -2.48, duration: 2 }); // cyan
+tl.from(plane.position, { z: -2.5, duration: 2 }); // cyan
 tl2.from(plane2.position, { z: 2.5, duration: 2 }); // orange
 tl3.from(plane3.position, { x: 2.5, z: 0.0, duration: 2 }); //red
-tl4.from(plane4.position, { x: -2.48, z: 0.0, duration: 2 }); //green
-tl5.from(plane5.position, { y: 2.507, z: 0.0, duration: 2 }); //purple
-tl6.from(plane6.position, { y: -2.48, z: 0.0, duration: 2 }); // yellow
+tl4.from(plane4.position, { x: -2.5, z: 0.0, duration: 2 }); //green
+tl5.from(plane5.position, { y: 2.5, z: 0.0, duration: 2 }); //purple
+tl6.from(plane6.position, { y: -2.5, z: 0.0, duration: 2 }); // yellow
