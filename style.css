@@ -22,11 +22,11 @@ body {
 }
 #logo {
   position: absolute;
-  top: 50px;
-  left: 80px;
+  top: 5vh;
+  left: 5vw;
   z-index: 2;
-  width: 200px;
-  height: 100px;
+  width: 250px;
+
 }
 #page1 {
   position: absolute;
