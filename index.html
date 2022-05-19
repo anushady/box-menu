@@ -12,7 +12,7 @@
     <canvas class="webgl"></canvas>
     <canvas class="webgl2"></canvas>
     </section>
-    <a href="#"><img id="logo" src="images/logo.png" alt=""></a>
+    <a href="#"><img id="logo" src="images/log.png" alt=""></a>
     <div id="page1">
         <h1>Title1</h1>
         <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae architecto sit facilis delectus amet at ipsam quia. Nihil eum quod voluptatem quisquam ad aspernatur at minus illo temporibus consequuntur. Temporibus explicabo optio officiis atque perspiciatis soluta! Doloremque ipsum, inventore nesciunt recusandae quas, aliquam ex molestiae ipsam quod, numquam et minus!</p>
@@ -149,7 +149,7 @@
   </script>
 
 
-    <script id="vertexShader" type="x-shader/x-vertex">
+    <!-- <script id="vertexShader" type="x-shader/x-vertex">
       #include <fog_pars_vertex>
       
       uniform float uTime;
@@ -568,14 +568,21 @@
         gl_FragColor = vec4(color, 1.0);
          #include <fog_fragment>
       }
-      </script>
+      </script> -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>    
-<script src="three.min.js"></script>
-<script src="three_mmi.js"></script>
-<script src="GLTFLoader.js"></script>
-<script src="OrbitControls.js"></script>
+<script src="js/three.min.js"></script>
+<script src="js/three_mmi.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/EffectComposer.js"></script>
+<script src="js/RenderPass.js"></script>
+<script src="js/ShaderPass.js"></script>
+<script src="js/CopyShader.js"></script>
+<script src="js/FXAAShader.js"></script>
+<script src="js/LuminosityHighPassShader.js"></script>
+<script src="js/UnrealBloomPass.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
 <script src="script.js"></script>
 </body>
