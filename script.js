@@ -177,9 +177,9 @@ effectFXAA.uniforms.resolution.value.set(
 
 const params = {
   exposure: 0,
-  bloomStrength: 0.5,
+  bloomStrength: 1.2,
   bloomThreshold: 0,
-  bloomRadius: 0.2,
+  bloomRadius: 1,
 };
 let composer, mixer;
 
