@@ -137,7 +137,7 @@ window.addEventListener("resize", () => {
 
   // Update renderer
   renderer2.setSize(sizes2.width, sizes2.height);
-  renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 0.9));
 });
 
 /**
@@ -148,7 +148,7 @@ const camera2 = new THREE.PerspectiveCamera(
   50,
   sizes2.width / sizes2.height,
   0.1,
-  1000
+  100
 );
 camera2.position.x = 0;
 camera2.position.y = 0;
@@ -161,11 +161,11 @@ scene2.add(camera2);
 const renderer2 = new THREE.WebGLRenderer({
   canvas: canvas2,
   alpha: false,
-  antialias: true,
+  antialias: false,
 });
 renderer2.autoClear = false;
 renderer2.setSize(sizes2.width, sizes2.height);
-renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 0.9));
 //renderer.toneMapping = THREE.ReinhardToneMapping;
 
 const renderScene = new THREE.RenderPass(scene2, camera2);
@@ -204,9 +204,9 @@ composer.addPass(renderScene);
 composer.addPass(effectFXAA);
 composer.addPass(bloomPass);
 
-renderer2.gammaInput = false;
+renderer2.gammaInput = true;
 //renderer.gammaOutput = true;
-renderer2.toneMappingExposure = Math.pow(0.9, 4.0);
+//renderer2.toneMappingExposure = Math.pow(0.9, 4.0);
 
 const clock2 = new THREE.Clock();
 var time = 0;
