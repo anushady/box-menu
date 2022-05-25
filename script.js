@@ -160,7 +160,7 @@ scene2.add(camera2);
  */
 const renderer2 = new THREE.WebGLRenderer({
   canvas: canvas2,
-  alpha: true,
+  alpha: false,
   antialias: true,
 });
 renderer2.autoClear = false;
@@ -671,12 +671,18 @@ mmi.addHandler("plane2", "click", function (mesh) {
 });
 mmi.addHandler("plane3", "click", function (mesh) {
   console.log("red");
-  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
-  time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
-  time1.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
-  time1.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
-  time1.to(plane6.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
-  time1.to(obj.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(plane.position, { z: 0.1, duration: 1 });
+  time2.to(plane.scale, { x: 0, y: 0, z: 0, duration: 01 });
+  time1.to(plane2.position, { z: -1.5, duration: 1 });
+  time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane4.position, { x: 1.5, z: 0.0, duration: 1 });
+  time2.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane5.position, { y: 1.5, z: 0.0, duration: 1 });
+  time2.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
+  time1.to(plane6.position, { y: -1.5, z: 0.0, duration: 1 });
+  time2.to(plane6.scale, { x: 0, y: 0, z: 0, duration: 1 });
+
+  //time1.to(obj.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane3.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane3.scale, { x: 4, y: 4, z: 0, duration: 1 });
