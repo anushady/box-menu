@@ -193,11 +193,11 @@ bloomPass.threshold = params.bloomThreshold;
 bloomPass.strength = params.bloomStrength;
 bloomPass.radius = params.bloomRadius;
 //bloomPass.renderToScreen = true;
-let gui3 = new dat.GUI();
+// let gui3 = new dat.GUI();
 
-gui3.add(bloomPass, "strength", 0, 10, 0.2).name("bloom Strength");
-gui3.add(bloomPass, "threshold", 0, 0.5, 0.1).name("bloom Threshold");
-gui3.add(bloomPass, "radius", 0, 10, 0.2).name("bloom Radius");
+// gui3.add(bloomPass, "strength", 0, 10, 0.2).name("bloom Strength");
+// gui3.add(bloomPass, "threshold", 0, 0.5, 0.1).name("bloom Threshold");
+// gui3.add(bloomPass, "radius", 0, 10, 0.2).name("bloom Radius");
 
 composer = new THREE.EffectComposer(renderer2);
 composer.addPass(renderScene);
