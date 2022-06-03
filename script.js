@@ -682,7 +682,7 @@ mmi.addHandler("plane3", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane3.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane3.scale, { x: 4, y: 4, z: 0, duration: 1 });
-  time1.to("#page4", { display: "flex", duration: 2 });
+  time1.to("#page5", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane4", "click", function (mesh) {
   console.log("green"); //club dark house// page2
