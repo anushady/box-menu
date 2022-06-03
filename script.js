@@ -137,7 +137,7 @@ window.addEventListener("resize", () => {
 
   // Update renderer
   renderer2.setSize(sizes2.width, sizes2.height);
-  renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 0.9));
+  renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
 /**
@@ -165,7 +165,7 @@ const renderer2 = new THREE.WebGLRenderer({
 });
 renderer2.autoClear = false;
 renderer2.setSize(sizes2.width, sizes2.height);
-renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 0.9));
+renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 //renderer.toneMapping = THREE.ReinhardToneMapping;
 
 const renderScene = new THREE.RenderPass(scene2, camera2);
@@ -612,7 +612,7 @@ scene.add(camera);
 //Controls
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enabled = true;
-controls.enableDamping = true;
+controls.enableDamping = false;
 controls.enableZoom = false;
 controls.keys = {
   LEFT: "ArrowLeft", //left arrow
@@ -646,7 +646,7 @@ const time9 = gsap.timeline();
 
 const mmi = new MouseMeshInteraction(scene, camera);
 mmi.addHandler("plane", "click", function (mesh) {
-  console.log("cyan");
+  console.log("cyan"); // Delivery //page4
   time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
@@ -656,9 +656,10 @@ mmi.addHandler("plane", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane.scale, { x: 4, y: 4, z: 0, duration: 1 });
+  time1.to("#page4", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane2", "click", function (mesh) {
-  console.log(" orange");
+  console.log(" orange"); // contacts // page1
   time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
@@ -668,27 +669,23 @@ mmi.addHandler("plane2", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane2.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane2.scale, { x: 4, y: 4, z: 0, duration: 1 });
+  time1.to("#page1", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane3", "click", function (mesh) {
-  console.log("red");
-  time1.to(plane.position, { z: 0.1, duration: 1 });
-  time2.to(plane.scale, { x: 0, y: 0, z: 0, duration: 01 });
-  time1.to(plane2.position, { z: -1.5, duration: 1 });
-  time2.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 1 });
-  time1.to(plane4.position, { x: 1.5, z: 0.0, duration: 1 });
-  time2.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 1 });
-  time1.to(plane5.position, { y: 1.5, z: 0.0, duration: 1 });
-  time2.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 1 });
-  time1.to(plane6.position, { y: -1.5, z: 0.0, duration: 1 });
-  time2.to(plane6.scale, { x: 0, y: 0, z: 0, duration: 1 });
-
-  //time1.to(obj.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  console.log("red"); // About // page5
+  time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(plane4.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(plane5.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(plane6.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
+  time1.to(obj.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane3.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane3.scale, { x: 4, y: 4, z: 0, duration: 1 });
+  time1.to("#page4", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane4", "click", function (mesh) {
-  console.log("green");
+  console.log("green"); //club dark house// page2
   time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
@@ -698,9 +695,10 @@ mmi.addHandler("plane4", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane4.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane4.scale, { x: 4, y: 4, z: 0, duration: 1 });
+  time1.to("#page2", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane5", "click", function (mesh) {
-  console.log("purple");
+  console.log("purple"); // privacy policy // page3
   time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
@@ -710,9 +708,10 @@ mmi.addHandler("plane5", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane5.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane5.scale, { x: 2, y: 2, z: 0, duration: 1 });
+  time1.to("#page3", { display: "flex", duration: 2 });
 });
 mmi.addHandler("plane6", "click", function (mesh) {
-  console.log("yellow");
+  console.log("yellow"); // club // page6
   time1.to(plane.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane2.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
   time1.to(plane3.scale, { x: 0, y: 0, z: 0, duration: 0.5 });
@@ -722,6 +721,7 @@ mmi.addHandler("plane6", "click", function (mesh) {
   time1.to(camera.position, { x: 0, y: 0, z: 1, duration: 1 });
   time1.to(plane6.rotation, { x: 0, y: -Math.PI / 4, z: 0, duration: 1 });
   time1.to(plane6.scale, { x: 2, y: 2, z: 0, duration: 1 });
+  time1.to("#page6", { display: "flex", duration: 2 });
 });
 
 const clock = new THREE.Clock();
