@@ -38,9 +38,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 
 }
 
@@ -63,10 +63,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 }
 
 
@@ -88,10 +87,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 
 }
 
@@ -114,11 +112,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
- 
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 }
 
 
@@ -140,10 +136,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 }
 
 
@@ -165,10 +160,9 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 }
 
 
