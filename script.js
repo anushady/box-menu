@@ -612,13 +612,10 @@ scene.add(camera);
 //Controls
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enabled = true;
+controls.enablePan = false;
 controls.enableDamping = true;
 controls.enableZoom = false;
 
-controls.touches = {
-  ONE: THREE.TOUCH.ROTATE,
-  TWO: THREE.TOUCH.DOLLY_PAN,
-};
 
 /**
  * Renderer
